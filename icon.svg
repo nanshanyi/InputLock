@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4A90D9"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 圆角背景 -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+
+  <!-- 键盘主体 -->
+  <rect x="152" y="260" width="720" height="400" rx="48" fill="white" opacity="0.95"/>
+
+  <!-- 第一行按键 -->
+  <rect x="200" y="300" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.8"/>
+  <rect x="300" y="300" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.8"/>
+  <rect x="400" y="300" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.8"/>
+  <rect x="500" y="300" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.8"/>
+  <rect x="600" y="300" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.8"/>
+  <rect x="700" y="300" width="120" height="64" rx="12" fill="#4A90D9" opacity="0.8"/>
+
+  <!-- 第二行按键 -->
+  <rect x="200" y="384" width="120" height="64" rx="12" fill="#4A90D9" opacity="0.6"/>
+  <rect x="340" y="384" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.6"/>
+  <rect x="440" y="384" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.6"/>
+  <rect x="540" y="384" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.6"/>
+  <rect x="640" y="384" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.6"/>
+  <rect x="740" y="384" width="80" height="64" rx="12" fill="#4A90D9" opacity="0.6"/>
+
+  <!-- 第三行：空格键 -->
+  <rect x="200" y="468" width="120" height="64" rx="12" fill="#4A90D9" opacity="0.5"/>
+  <rect x="340" y="468" width="340" height="64" rx="12" fill="#4A90D9" opacity="0.4"/>
+  <rect x="700" y="468" width="120" height="64" rx="12" fill="#4A90D9" opacity="0.5"/>
+
+  <!-- 右下角锁底圆 -->
+  <circle cx="800" cy="713" r="160" fill="#1E40AF"/>
+  <circle cx="800" cy="713" r="140" fill="#F59E0B"/>
+
+  <!-- 锁环：用圆环（圆形 + 内圆遮挡）+ 矩形遮挡下半 -->
+  <!-- 外圆 -->
+  <circle cx="800" cy="663" r="50" fill="white"/>
+  <!-- 内圆挖空 -->
+  <circle cx="800" cy="663" r="30" fill="#F59E0B"/>
+  <!-- 遮挡下半圆，只留上半环 -->
+  <rect x="745" y="663" width="110" height="55" fill="#F59E0B"/>
+
+  <!-- 锁身 -->
+  <rect x="735" y="683" width="130" height="100" rx="18" fill="white"/>
+
+  <!-- 锁孔 -->
+  <circle cx="800" cy="725" r="14" fill="#F59E0B"/>
+  <rect x="795" y="725" width="10" height="24" rx="5" fill="#F59E0B"/>
+</svg>
