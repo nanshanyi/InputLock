@@ -11,7 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-13.0%2B-blue" alt="macOS 13.0+">
   <img src="https://img.shields.io/badge/Swift-5.0-orange" alt="Swift 5.0">
-  <img src="https://img.shields.io/badge/version-1.0.0-green" alt="Version 1.0.0">
+  <img src="https://img.shields.io/badge/version-1.0.1-green" alt="Version 1.0.1">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License">
 </p>
 
@@ -26,7 +26,7 @@
 
 ### 方法一：下载 DMG（推荐）
 
-直接下载 [InputLock 1.0.dmg](https://github.com/nanshanyi/InputLock/releases/download/v1.0.0/InputLock%201.0.dmg)，拖入应用程序文件夹即可。
+直接下载 [InputLock-1.0.1.dmg](https://github.com/nanshanyi/InputLock/releases/download/v1.0.1/InputLock-1.0.1.dmg)，拖入应用程序文件夹即可。
 
 ### 方法二：源码编译
 
