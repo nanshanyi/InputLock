@@ -53,17 +53,18 @@ enum InputSourceManager {
         return result
     }
 
-    static func switchTo(id: String) {
+    @discardableResult
+    static func switchTo(id: String) -> Bool {
         let sources = TISCreateInputSourceList(nil, false).takeRetainedValue() as! [TISInputSource]
         for source in sources {
             let sourceID = Unmanaged<CFString>.fromOpaque(
                 TISGetInputSourceProperty(source, kTISPropertyInputSourceID)
             ).takeUnretainedValue() as String
             if sourceID == id {
-                TISSelectInputSource(source)
-                return
+                return TISSelectInputSource(source) == noErr
             }
         }
+        return false
     }
 
     private static func iconForSource(_ source: TISInputSource) -> NSImage? {

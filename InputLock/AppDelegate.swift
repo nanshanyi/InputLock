@@ -9,21 +9,51 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var lockItem: NSMenuItem!
     var launchItem: NSMenuItem!
     var inputSourceItems: [NSMenuItem] = []
-    var isSwitching = false
+    var enforceScheduled = false
+    var retryWorkItem: DispatchWorkItem?
+    var pollTimer: Timer?
+    var lastObservedID = ""
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         lockedInputID = InputSourceManager.currentID()
+        lastObservedID = lockedInputID
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         updateStatusTitle()
         buildMenu()
         statusItem.menu = menu
 
+        // AppKit 会在 App 非激活时挂起分布式通知的投递（默认 .coalesce 只会排队合并），
+        // 菜单栏 App 几乎一直处于非激活状态，必须显式要求立即投递。
         DistributedNotificationCenter.default().addObserver(
             self,
             selector: #selector(inputSourceChanged),
             name: NSNotification.Name("com.apple.Carbon.TISNotifySelectedKeyboardInputSourceChanged"),
-            object: nil
+            object: nil,
+            suspensionBehavior: .deliverImmediately
         )
+
+        // 切换 App（“自动切换到文稿的输入法”）、唤醒、解锁屏幕时系统可能恢复别的输入法
+        let wsCenter = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didActivateApplicationNotification,
+                     NSWorkspace.didWakeNotification,
+                     NSWorkspace.sessionDidBecomeActiveNotification] {
+            wsCenter.addObserver(self, selector: #selector(inputSourceChanged), name: name, object: nil)
+        }
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(inputSourceChanged),
+            name: NSNotification.Name("com.apple.screenIsUnlocked"),
+            object: nil,
+            suspensionBehavior: .deliverImmediately
+        )
+
+        // 兜底轮询：通知丢失或被合并时也能在 1 秒内纠正
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.pollCurrentSource()
+        }
+        timer.tolerance = 0.2
+        RunLoop.main.add(timer, forMode: .common)
+        pollTimer = timer
     }
 
     func updateLockItem() {
@@ -141,30 +171,58 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return result
     }
 
+    /// 任何可能导致输入法变化的事件都走这里。不再丢弃事件，而是合并到下一轮 runloop 统一检查，
+    /// 让系统先完成它自己的切换，再读取最终状态。
     @objc func inputSourceChanged() {
-        guard !isSwitching else { return }
+        guard !enforceScheduled else { return }
+        enforceScheduled = true
+        DispatchQueue.main.async {
+            self.enforceScheduled = false
+            self.enforceLock(attempt: 0)
+        }
+    }
+
+    func pollCurrentSource() {
         let currentID = InputSourceManager.currentID()
+        if currentID != lastObservedID || (locked && currentID != lockedInputID) {
+            inputSourceChanged()
+        }
+    }
+
+    /// 切回锁定输入法，并在短延迟后复查。TISSelectInputSource 对中日韩输入法偶尔不生效，
+    /// 或被系统随后的切换覆盖，所以需要校验 + 重试。
+    func enforceLock(attempt: Int) {
+        retryWorkItem?.cancel()
+        retryWorkItem = nil
+
+        let currentID = InputSourceManager.currentID()
+        if currentID != lastObservedID {
+            lastObservedID = currentID
+            updateStatusTitle()
+        }
+        guard locked, currentID != lockedInputID else { return }
+
+        InputSourceManager.switchTo(id: lockedInputID)
+        lastObservedID = InputSourceManager.currentID()
         updateStatusTitle()
 
-        if locked && currentID != lockedInputID {
-            isSwitching = true
-            InputSourceManager.switchTo(id: lockedInputID)
-            updateStatusTitle()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.isSwitching = false
-            }
+        let maxAttempts = 5
+        guard attempt + 1 < maxAttempts else { return }
+        let item = DispatchWorkItem { [weak self] in
+            self?.enforceLock(attempt: attempt + 1)
         }
+        retryWorkItem = item
+        // 0.05s, 0.1s, 0.2s, 0.4s 递增复查
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05 * pow(2, Double(attempt)), execute: item)
     }
 
     @objc func selectInputSource(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String else { return }
-        isSwitching = true
         if locked { lockedInputID = id }
         InputSourceManager.switchTo(id: id)
+        lastObservedID = InputSourceManager.currentID()
         updateStatusTitle()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.isSwitching = false
-        }
+        if locked { enforceLock(attempt: 0) }
     }
 
     @objc func toggleLock() {
